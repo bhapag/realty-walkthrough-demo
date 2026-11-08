@@ -1,0 +1,120 @@
+---
+import { Picture, getImage } from 'astro:assets';
+import Base from '../../../layouts/Base.astro';
+import Icon from '../../../components/Icon.astro';
+import EnquiryForm from '../../../components/EnquiryForm.astro';
+import WhatsAppButton from '../../../components/WhatsAppButton.astro';
+import { ui, href, langs, formatPrice, type Lang } from '../../../i18n/ui';
+import { images } from '../../../data/images';
+import { properties, type Property } from '../../../data/properties';
+import { hoodById } from '../../../data/neighbourhoods';
+
+export const getStaticPaths = () =>
+  langs.flatMap((lang) => properties.map((p) => ({ params: { lang, id: p.id }, props: { p } })));
+
+const lang = Astro.params.lang as Lang;
+const { p } = Astro.props as { p: Property };
+const t = ui[lang];
+const D = t.detail;
+const hood = hoodById[p.hood];
+const gallery = await Promise.all(
+  p.images.map(async (key) => ({
+    key,
+    alt: images[key].alt[lang],
+    full: (await getImage({ src: images[key].src, width: 1400, format: 'webp', quality: 78 })).src,
+  })),
+);
+const price = formatPrice(lang, p.price);
+---
+<Base lang={lang} title={`${p.title[lang]} · ${t.card.sample} · ${t.brand.name} ${t.brand.suffix}`} path={`properties/${p.id}/`} current="properties">
+  <div class="wrap">
+    <nav class="crumb" aria-label={D.back}>
+      <a class="back" href={href(lang, 'properties/')} data-back><Icon name="arrow" />{D.back}</a>
+    </nav>
+
+    <header class="detail-head">
+      <p class="card-deal"><span>{t.deals[p.deal]}</span><span class="card-type">{t.types[p.type]}</span><span class="card-type">{hood.name[lang]}</span></p>
+      <h1 style="font-size: var(--step-3)">{p.title[lang]}</h1>
+      <p class="sample-note"><Icon name="info" />{D.sampleNote}</p>
+    </header>
+
+    <section class="gallery-wrap" aria-label={D.gallery}>
+      <div class:list={['gallery', { 'is-two': p.images.length === 2 }]} data-swiper>
+        {gallery.map((g, i) => (
+          <button type="button" data-gallery-item aria-label={`${D.openImage(i + 1, gallery.length)}: ${g.alt}`}>
+            <Picture src={images[g.key].src} alt="" formats={['avif', 'webp']} fallbackFormat="jpg" widths={i === 0 ? [640, 1000, 1400] : [480, 720]} sizes={i === 0 ? '(max-width: 720px) 88vw, 760px' : '(max-width: 720px) 88vw, 380px'} quality={72} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} decoding="async" />
+            {i === 2 && gallery.length > 3 && <span class="more-count" aria-hidden="true" dir="ltr">+{gallery.length - 3}</span>}
+          </button>
+        ))}
+      </div>
+      <span class="gallery-count" data-swiper-count aria-hidden="true" dir="ltr">1 / {gallery.length}</span>
+      <p class="media-chip" style="margin-block-start: 0.75rem"><span class="media-label">{t.media.label}</span><span>{t.media.note}</span></p>
+    </section>
+
+    <div class="detail-grid">
+      <div class="detail-main">
+        <section aria-labelledby="facts-title">
+          <h2 id="facts-title">{D.facts}</h2>
+          <dl class="facts">
+            <div><dt>{D.price}</dt><dd>{price}{p.deal === 'rent' && <small>{t.card.perMonth}</small>}</dd></div>
+            <div><dt>{D.rooms}</dt><dd>{p.rooms}<small>{D.roomsHint}</small></dd></div>
+            <div><dt>{D.bedrooms}</dt><dd>{p.bedrooms}</dd></div>
+            <div><dt>{D.bathrooms}</dt><dd>{p.bathrooms}</dd></div>
+            <div><dt>{D.size}</dt><dd>{t.card.size(p.size)}</dd></div>
+            {p.outdoor && <div><dt>{D.outdoor}</dt><dd>{D.outdoorKinds[p.outdoor.kind]}<small>{t.card.size(p.outdoor.size)}</small></dd></div>}
+            <div><dt>{D.floor}</dt><dd>{D.floorOf(p.floor, p.floors)}</dd></div>
+            <div><dt>{D.availability}</dt><dd style="font-size: var(--step-0)">{D.availabilityValue}</dd></div>
+          </dl>
+        </section>
+
+        <section aria-labelledby="about-home">
+          <h2 id="about-home">{D.about}</h2>
+          <div class="prose">{p.description[lang].map((para) => <p>{para}</p>)}</div>
+          <h3>{D.features}</h3>
+          <ul class="feature-list">{p.features[lang].map((f) => <li>{f}</li>)}</ul>
+        </section>
+
+        <section aria-labelledby="loc-title">
+          <h2 id="loc-title">{D.location}</h2>
+          <div class="location">
+            <h3>{hood.name[lang]}</h3>
+            <p>{hood.note[lang]}</p>
+            <p class="note">{D.locationNote}</p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="detail-side" aria-label={D.enquire}>
+        <div class="price-panel">
+          <small>{t.deals[p.deal]}</small>
+          <p class="card-price">{price}{p.deal === 'rent' && <small> {t.card.perMonth}</small>}</p>
+          <small>{t.card.rooms(p.rooms)}, {t.card.bedrooms(p.bedrooms)}, {t.card.size(p.size)}</small>
+          <WhatsAppButton lang={lang} text={t.whatsapp.about(p.title[lang])} variant="secondary" />
+        </div>
+        <EnquiryForm lang={lang} id="enquiry" level="h2" heading={D.enquire} about={`${p.title[lang]} (${p.id})`} interest={p.deal === 'rent' ? 'rent' : 'buy'} />
+      </aside>
+    </div>
+  </div>
+
+  <dialog class="viewer" data-viewer aria-label={D.viewer}>
+    <div class="viewer-inner">
+      <div class="viewer-bar">
+        <span class="viewer-count" data-viewer-count data-template={D.counter(0, 0).replace('0', '{i}').replace('0', '{n}')}></span>
+        <button class="icon-btn" type="button" data-close aria-label={D.close} autofocus><Icon name="close" /></button>
+      </div>
+      <div class="viewer-stage">
+        <div class="viewer-track" data-viewer-track>
+          {gallery.map((g) => <figure class="viewer-slide"><img src={g.full} alt={g.alt} loading="lazy" decoding="async" /></figure>)}
+        </div>
+        <button class="icon-btn viewer-prev" type="button" data-prev aria-label={D.prev}><Icon name="prev" /></button>
+        <button class="icon-btn viewer-next" type="button" data-next aria-label={D.next}><Icon name="next" /></button>
+      </div>
+      <p class="viewer-foot media-chip"><span class="media-label">{t.media.label}</span><span>{t.media.note}</span></p>
+    </div>
+  </dialog>
+</Base>
+
+<script>
+  import '../../../scripts/gallery';
+  import '../../../scripts/enquiry';
+</script>

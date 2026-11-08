@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.astro/
+qa/walkthrough/*.webm
+.impeccable/
+qa/bench/media/
+qa/.profiles/
+qa/recordings/rehearsal-*
+.deploy/
+qa/recordings/*.webm
+.classic/
+.deploy-classic/
+qa/perf/*.trace.json
+qa/recordings/*.webm
+qa/wip/

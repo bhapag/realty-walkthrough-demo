@@ -1,0 +1,39 @@
+---
+import { Picture } from 'astro:assets';
+import Icon from './Icon.astro';
+import { ui, href, formatPrice, type Lang } from '../i18n/ui';
+import { images } from '../data/images';
+import { hoodById } from '../data/neighbourhoods';
+import type { Property } from '../data/properties';
+
+interface Props { p: Property; lang: Lang; headingLevel?: 'h2' | 'h3'; }
+const { p, lang, headingLevel = 'h3' } = Astro.props;
+const t = ui[lang];
+const H = headingLevel;
+const url = href(lang, `properties/${p.id}/`);
+// Up to three photos, swipeable on touch (scroll-snap); the first is the cover.
+const slides = p.images.slice(0, 3).map((k) => images[k]);
+---
+<article class="card" data-card data-deal={p.deal} data-hood={p.hood} data-type={p.type} data-price={p.price} data-beds={p.bedrooms}>
+  <div class="card-media">
+    <a class="card-track" href={url} tabindex="-1" aria-hidden="true" data-swiper>
+      {slides.map((img, i) => (
+        <span class="card-slide">
+          <Picture src={img.src} alt="" formats={['avif', 'webp']} fallbackFormat="jpg" widths={[480, 720, 1024]} sizes="(max-width: 720px) 92vw, 420px" quality={70} loading="lazy" fetchpriority={i ? 'low' : undefined} decoding="async" />
+        </span>
+      ))}
+    </a>
+    <span class="badge">{t.card.sample}</span>
+    <span class="card-price-tag"><span class="card-price">{formatPrice(lang, p.price)}</span>{p.deal === 'rent' && <small> {t.card.perMonth}</small>}</span>
+    {slides.length > 1 && <span class="card-dots" aria-hidden="true">{slides.map((_, i) => <i class:list={{ on: i === 0 }}></i>)}</span>}
+  </div>
+  <div class="card-body">
+    <p class="card-deal"><span>{t.deals[p.deal]}</span><span class="card-type">{t.types[p.type]}</span><span class="card-type">{hoodById[p.hood].name[lang]}</span></p>
+    <H><a href={url}>{p.title[lang]}</a></H>
+    <ul class="facts-inline">
+      <li><Icon name="rooms" />{t.card.rooms(p.rooms)}</li>
+      <li><Icon name="bed" />{t.card.bedrooms(p.bedrooms)}</li>
+      <li><Icon name="area" /><span>{t.card.size(p.size)}</span></li>
+    </ul>
+  </div>
+</article>

@@ -1,0 +1,13 @@
+---
+// Click-to-chat: opens WhatsApp with a draft in the page's language. The
+// visitor reviews and sends it; nothing is sent from this site.
+import Icon from './Icon.astro';
+import { ui, type Lang } from '../i18n/ui';
+import { contact, waLink } from '../config/contact';
+
+interface Props { lang: Lang; text?: string; variant?: 'primary' | 'secondary'; }
+const { lang, text = ui[lang].whatsapp.message, variant = 'primary' } = Astro.props;
+---
+{contact.whatsappEnabled && (
+  <a class:list={['btn', `btn-${variant}`, 'btn-wa']} href={waLink(text)} target="_blank" rel="noopener" data-whatsapp><Icon name="chat" />{ui[lang].whatsapp.action}</a>
+)}

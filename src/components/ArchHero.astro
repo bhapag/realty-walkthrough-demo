@@ -1,0 +1,37 @@
+---
+// Classic demo opening: copy beside a stone arch framing the terrace, with a
+// short Higgsfield clip on capable desktops (src/scripts/hero.ts).
+import { Picture } from 'astro:assets';
+import { ui, href, type Lang } from '../i18n/ui';
+import { images } from '../data/images';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <h1 id="hero-title" class="hero-title">{t.hero.title}</h1>
+      <p class="hero-lede">{t.hero.lede}</p>
+      <div class="actions">
+        <a class="btn btn-primary" href={href(lang, 'properties/')}>{t.hero.primary}</a>
+        <a class="btn btn-secondary" href={href(lang, 'contact/')}>{t.hero.secondary}</a>
+      </div>
+    </div>
+    <figure class="arch-figure">
+      <div class="arch" data-arch data-video="/media/hero-dolly-1280.mp4">
+        <div class="arch-opening">
+          <div class="arch-media">
+            <Picture src={images.heroTerrace.src} alt={images.heroTerrace.alt[lang]} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[560, 800, 1100, 1400, 1800]} sizes="(max-width: 860px) 92vw, 46vw" quality={74} loading="eager" fetchpriority="high" decoding="async" />
+          </div>
+        </div>
+        <div class="arch-sill" aria-hidden="true"></div>
+      </div>
+      <figcaption class="arch-caption">
+        <span class="media-chip"><span class="media-label">{t.media.label}</span><span>{t.media.note}</span></span>
+        <button class="motion-toggle" type="button" data-motion-toggle data-pause={t.hero.pause} data-play={t.hero.play}>{t.hero.pause}</button>
+      </figcaption>
+    </figure>
+  </div>
+</section>

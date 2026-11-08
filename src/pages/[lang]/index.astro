@@ -1,0 +1,128 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Journey from '../../components/Journey.astro';
+import ArchHero from '../../components/ArchHero.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import Mark from '../../components/Mark.astro';
+import Icon from '../../components/Icon.astro';
+import WhatsAppButton from '../../components/WhatsAppButton.astro';
+import { ui, href, langs, type Lang } from '../../i18n/ui';
+import { images } from '../../data/images';
+import { properties } from '../../data/properties';
+import { neighbourhoods } from '../../data/neighbourhoods';
+import { variant } from '../../config/variant';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const t = ui[lang];
+const featured = properties.filter((p) => p.featured);
+const countIn = (id: string) => properties.filter((p) => p.hood === id).length;
+const num = (i: number) => String(i + 1).padStart(2, '0');
+---
+<Base lang={lang} title={t.meta.home} description={t.meta.homeDesc} current="home">
+  {variant === 'classic' ? <ArchHero lang={lang} /> : <Journey lang={lang} />}
+
+  <section class="section section-first" id="selected" aria-labelledby="selected-title">
+    <div class="wrap">
+      <div class="section-head split" data-reveal>
+        <h2 id="selected-title">{t.selected.title}</h2>
+        <a class="text-link arrow-link" href={href(lang, 'properties/')}>{t.selected.all}<Icon name="arrow" /></a>
+      </div>
+      <div class="cards" data-reveal>
+        {featured.map((p) => <PropertyCard p={p} lang={lang} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section band" id="about" aria-labelledby="about-title">
+    <div class="wrap about-grid">
+      <aside class="profile" aria-label={t.brand.name} data-reveal>
+        <span class="profile-mark" aria-hidden="true"><Mark /></span>
+        <p class="profile-name">{t.brand.name}</p>
+        <p class="profile-role">{t.about.role}<br />{t.about.city}</p>
+        <p class="profile-label">{t.about.focusTitle}</p>
+        <ul class="services">{t.about.services.map((s) => <li>{s}</li>)}</ul>
+      </aside>
+      <div class="about-copy" data-reveal>
+        <h2 id="about-title">{t.about.title}</h2>
+        {t.about.body.map((p) => <p>{p}</p>)}
+        <p><a class="btn btn-secondary" href={href(lang, 'contact/')}>{t.hero.secondary}</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="hoods-title">
+    <div class="wrap">
+      <div class="section-head split" data-reveal>
+        <h2 id="hoods-title">{t.hoods.title}</h2>
+        <p>{t.hoods.intro}</p>
+      </div>
+      <ol class="hood-list" data-reveal>
+        {neighbourhoods.map((n, i) => {
+          const c = countIn(n.id);
+          return (
+            <li>
+              <a class="hood-row" href={href(lang, `properties/?hood=${n.id}`)}>
+                <span class="hood-num" aria-hidden="true">{num(i)}</span>
+                <span class="hood-text">
+                  <h3>{n.name[lang]}</h3>
+                  <span class="hood-note">{n.note[lang]}</span>
+                </span>
+                <span class="hood-count">{c ? t.hoods.count(c) : t.hoods.none}<Icon name="arrow" /></span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section band" aria-labelledby="abroad-title">
+    <div class="wrap">
+      <div class="section-head split" data-reveal>
+        <h2 id="abroad-title">{t.abroad.title}</h2>
+        <p>{t.abroad.intro}</p>
+      </div>
+      <div class="abroad-grid">
+        <figure class="abroad-media" data-reveal>
+          <Picture src={images.keys.src} alt={images.keys.alt[lang]} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[480, 800]} sizes="(max-width: 900px) 92vw, 560px" quality={70} loading="lazy" decoding="async" />
+          <figcaption class="media-chip media-chip-overlay"><span class="media-label">{t.media.label}</span></figcaption>
+        </figure>
+        <div data-reveal>
+          <ol class="steps">
+            {t.abroad.steps.map((s) => <li><h3>{s.t}</h3><p>{s.d}</p></li>)}
+          </ol>
+          <p style="margin-block-start: 1.5rem"><a class="text-link arrow-link" href={href(lang, 'buying-from-abroad/')}>{t.abroad.more}<Icon name="arrow" /></a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="wrap faq-grid">
+      <div class="section-head" data-reveal><h2 id="faq-title">{t.faq.title}</h2></div>
+      <div class="faq" data-reveal>
+        {t.faq.items.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="cta-title">
+    <div class="cta" id="whatsapp" data-reveal>
+      <h2 id="cta-title">{t.cta.title}</h2>
+      <p>{t.whatsapp.body}</p>
+      <div class="actions">
+        <WhatsAppButton lang={lang} />
+        <a class="btn btn-secondary" href={href(lang, 'contact/')}>{t.cta.action}</a>
+      </div>
+      <p class="note">{t.whatsapp.note}</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Each script acts only when its own hero is on the page.
+  import '../../scripts/journey';
+  import '../../scripts/hero';
+</script>

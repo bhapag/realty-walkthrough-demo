@@ -1,0 +1,63 @@
+---
+// Demo enquiry form. Validates in the browser and shows a clear
+// "nothing was sent" message. It has no action URL and stores nothing.
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props { lang: Lang; id?: string; about?: string; interest?: string; heading?: string; level?: 'h2' | 'h3'; }
+const { lang, id = 'enquiry', about, interest = '', heading, level = 'h2' } = Astro.props;
+const t = ui[lang];
+const H = level;
+const f = (name: string) => `${id}-${name}`;
+---
+<form class="form-card" id={id} novalidate data-enquiry
+  data-errors={JSON.stringify(t.form.errors)}
+  data-summary-one={t.form.errorSummary(1)}
+  data-summary-many={t.form.errorSummary(2).replace('2', '{n}')}
+  data-demo-title={t.form.demoTitle}
+  data-demo-body={t.form.demoBody}
+  aria-labelledby={f('title')}>
+  <div>
+    <H id={f('title')}>{heading ?? t.form.title}</H>
+    <p class="note">{t.form.intro}</p>
+  </div>
+  <div class="form-status" role="status" aria-live="polite" tabindex="-1" data-status></div>
+  {about && (
+    <p class="note"><strong>{t.form.about}:</strong> {about}</p>
+  )}
+  {about && <input type="hidden" name="about" value={about} />}
+  <div class="form-grid">
+    <div class="field">
+      <label for={f('name')}>{t.form.name}</label>
+      <input id={f('name')} name="name" type="text" autocomplete="name" required aria-describedby={f('name-err')} />
+      <p class="error" id={f('name-err')}></p>
+    </div>
+    <div class="field">
+      <label for={f('email')}>{t.form.email}</label>
+      <input id={f('email')} name="email" type="email" autocomplete="email" dir="ltr" required aria-describedby={f('email-err')} />
+      <p class="error" id={f('email-err')}></p>
+    </div>
+    <div class="field">
+      <label for={f('phone')}>{t.form.phone} <span class="muted">({t.form.optional})</span></label>
+      <input id={f('phone')} name="phone" type="tel" autocomplete="tel" dir="ltr" inputmode="tel" aria-describedby={f('phone-err')} />
+      <p class="error" id={f('phone-err')}></p>
+    </div>
+    <div class="field">
+      <label for={f('interest')}>{t.form.interest}</label>
+      <select id={f('interest')} name="interest" required aria-describedby={f('interest-err')}>
+        <option value="">{t.form.interestChoose}</option>
+        {Object.entries(t.form.interests).map(([v, label]) => <option value={v} selected={v === interest}>{label}</option>)}
+      </select>
+      <p class="error" id={f('interest-err')}></p>
+    </div>
+    <div class="field full">
+      <label for={f('location')}>{t.form.location} <span class="muted">({t.form.optional})</span></label>
+      <input id={f('location')} name="location" type="text" autocomplete="country-name" />
+    </div>
+    <div class="field full">
+      <label for={f('message')}>{t.form.message} <span class="muted">({t.form.optional})</span></label>
+      <textarea id={f('message')} name="message" maxlength="1200" aria-describedby={f('message-err')}></textarea>
+      <p class="error" id={f('message-err')}></p>
+    </div>
+  </div>
+  <div><button class="btn btn-primary" type="submit">{t.form.submit}</button></div>
+</form>

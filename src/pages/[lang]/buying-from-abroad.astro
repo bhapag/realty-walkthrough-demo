@@ -1,0 +1,44 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { ui, href, langs, type Lang } from '../../i18n/ui';
+import { images } from '../../data/images';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const t = ui[lang];
+const A = t.abroad;
+---
+<Base lang={lang} title={`${t.meta.abroad} · ${t.brand.name} ${t.brand.suffix}`} path="buying-from-abroad/" current="abroad">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{t.abroadPage.title}</h1>
+      <p>{t.abroadPage.intro}</p>
+    </header>
+
+    <div class="abroad-grid" style="margin-block-start: 1.5rem">
+      <section aria-labelledby="process-title">
+        <h2 id="process-title" style="margin-block-end: 1.25rem">{t.abroadPage.process}</h2>
+        <ol class="steps">
+          {A.steps.map((s) => <li><h3>{s.t}</h3><p>{s.d}</p></li>)}
+        </ol>
+      </section>
+      <figure class="abroad-media" style="margin: 0">
+        <Picture src={images.journeyIn.src} alt={images.journeyIn.alt[lang]} formats={['avif', 'webp']} fallbackFormat="jpg" widths={[560, 900, 1200]} sizes="(max-width: 900px) 92vw, 600px" quality={72} loading="eager" decoding="async" />
+        <figcaption class="media-chip media-chip-overlay"><span class="media-label">{t.media.label}</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="aside-grid section" style="padding-block-end: 0">
+      <section class="aside" aria-labelledby="rooms-title"><h2 id="rooms-title" style="font-family: var(--font-body); font-weight: 600; font-size: var(--step-0)">{A.roomsTitle}</h2><p>{A.roomsBody}</p></section>
+      <section class="aside" aria-labelledby="time-title"><h2 id="time-title" style="font-family: var(--font-body); font-weight: 600; font-size: var(--step-0)">{A.timeTitle}</h2><p>{A.timeBody}</p></section>
+      <section class="aside" aria-labelledby="limits-title"><h2 id="limits-title" style="font-family: var(--font-body); font-weight: 600; font-size: var(--step-0)">{A.limitsTitle}</h2><p>{A.limitsBody}</p></section>
+    </div>
+
+    <div class="cta" style="margin-block-start: var(--section)">
+      <h2>{t.abroadPage.next}</h2>
+      <p>{t.cta.body}</p>
+      <a class="btn btn-primary" href={href(lang, 'contact/') + '?interest=abroad'}>{t.cta.action}</a>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import EnquiryForm from '../../components/EnquiryForm.astro';
+import { ui, langs, type Lang } from '../../i18n/ui';
+import { contact } from '../../config/contact';
+import WhatsAppButton from '../../components/WhatsAppButton.astro';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const t = ui[lang];
+const C = t.contact;
+const on = contact.actionsEnabled;
+---
+<Base lang={lang} title={`${t.meta.contact} · ${t.brand.name} ${t.brand.suffix}`} path="contact/" current="contact">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{C.title}</h1>
+      <p>{C.intro}</p>
+    </header>
+    <div class="contact-grid">
+      <EnquiryForm lang={lang} id="contact-form" />
+      <aside class="aside" aria-labelledby="details-title">
+        {contact.whatsappEnabled && (
+          <section class="wa-block" aria-labelledby="wa-title">
+            <h2 id="wa-title">{t.whatsapp.title}</h2>
+            <p>{t.whatsapp.body}</p>
+            <WhatsAppButton lang={lang} />
+            <p class="note">{t.whatsapp.note}</p>
+          </section>
+        )}
+        <h2 id="details-title" style="font-family: var(--font-body); font-weight: 600; font-size: var(--step-1)">{C.detailsTitle}</h2>
+        <dl class="contact-list">
+          <div><dt>{C.phoneLabel}</dt><dd>{contact.showDetails ? <span class="ltr" dir="ltr">{contact.phoneDisplay}</span> : C.tbc}</dd></div>
+          <div><dt>{C.emailLabel}</dt><dd>{contact.showDetails ? <span class="ltr" dir="ltr">{contact.email}</span> : C.tbc}</dd></div>
+          <div><dt>{t.detail.location}</dt><dd>{C.city}</dd></div>
+        </dl>
+        <p class="pending">{C.pending}</p>
+        <div class="contact-actions">
+          {on ? (
+            <>
+              <a class="btn btn-secondary" href={`tel:${contact.phoneE164}`}>{C.call}</a>
+              <a class="btn btn-secondary" href={`https://wa.me/${contact.whatsappDigits}`} rel="noopener">{C.whatsapp}</a>
+              <a class="btn btn-secondary" href={`mailto:${contact.email}`}>{C.emailAction}</a>
+            </>
+          ) : (
+            <>
+              <button class="btn" type="button" disabled>{C.call}</button>
+              <button class="btn" type="button" disabled>{C.emailAction}</button>
+            </>
+          )}
+        </div>
+      </aside>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import '../../scripts/enquiry';
+  // Preselect interest from ?interest= (e.g. from the abroad page).
+  const v = new URLSearchParams(location.search).get('interest');
+  const sel = document.querySelector<HTMLSelectElement>('#contact-form-interest');
+  if (v && sel && [...sel.options].some((o) => o.value === v)) sel.value = v;
+</script>

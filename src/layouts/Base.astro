@@ -1,0 +1,121 @@
+---
+import '@fontsource-variable/frank-ruhl-libre';
+import '@fontsource-variable/assistant';
+import '../styles/global.css';
+import { getImage } from 'astro:assets';
+import Mark from '../components/Mark.astro';
+import { ui, dir, other, href, type Lang } from '../i18n/ui';
+import { images } from '../data/images';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description?: string;
+  path?: string; // path after /{lang}/, used for the language switch
+  current?: 'home' | 'properties' | 'abroad' | 'contact';
+}
+const { lang, title, description, path = '', current } = Astro.props;
+const t = ui[lang];
+const alt = other(lang);
+const stone = await getImage({ src: images.stone.src, width: 512, format: 'webp', quality: 72 });
+const nav = [
+  { key: 'properties', label: t.nav.properties, to: href(lang, 'properties/') },
+  { key: 'abroad', label: t.nav.abroad, to: href(lang, 'buying-from-abroad/') },
+  { key: 'about', label: t.nav.about, to: href(lang) + '#about' },
+  { key: 'contact', label: t.nav.contact, to: href(lang, 'contact/') },
+];
+---
+<!doctype html>
+<html lang={lang} dir={dir(lang)} style={`--stone-url: url(${stone.src})`}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang={lang} href={href(lang, path)} />
+    <link rel="alternate" hreflang={alt} href={href(alt, path)} />
+    <meta name="theme-color" content="#f8f4ed" />
+    <script is:inline>(function(d,c){d.classList.add('js');var k=navigator.connection;var r=matchMedia('(prefers-reduced-motion: reduce)').matches;if(!r&&!(k&&k.saveData)&&'createImageBitmap' in window)d.classList.add('walk');})(document.documentElement);</script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <header class="site-header">
+      <div class="wrap header-row">
+        <a class="wordmark" href={href(lang)} aria-label={`${t.brand.name} ${t.brand.suffix}`}>
+          <Mark />
+          <span class="wordmark-text" aria-hidden="true">
+            <span class="wordmark-name">{t.brand.name}</span>
+            <span class="wordmark-suffix">{t.brand.suffix}</span>
+          </span>
+        </a>
+        <span class="demo-chip">{t.demoChip}</span>
+        <nav class="site-nav" id="site-nav" aria-label={t.footer.nav} data-open="false">
+          <ul>
+            {nav.map((n, i) => (
+              <li style={`--i: ${i}`}><a href={n.to} aria-current={n.key === current ? 'page' : undefined}>{n.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <a class="lang-switch" href={href(alt, path)} hreflang={alt} lang={alt} data-lang-switch title={t.nav.switchTo}>{ui[alt].langName}</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle data-open-label={t.nav.menu} data-close-label={t.nav.close}>{t.nav.menu}</button>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div class="footer-brand">
+          <a class="wordmark" href={href(lang)} aria-label={`${t.brand.name} ${t.brand.suffix}`}>
+            <Mark />
+            <span class="wordmark-text" aria-hidden="true">
+              <span class="wordmark-name">{t.brand.name}</span>
+              <span class="wordmark-suffix">{t.brand.suffix}</span>
+            </span>
+          </a>
+          <p>{t.brand.proposed}</p>
+          <p>{t.contact.city}</p>
+        </div>
+        <nav aria-label={t.footer.nav}>
+          <h2>{t.footer.nav}</h2>
+          <ul>
+            {nav.map((n) => <li><a href={n.to}>{n.label}</a></li>)}
+            <li><a href={href(alt, path)} hreflang={alt} lang={alt} data-lang-switch>{ui[alt].langName}</a></li>
+          </ul>
+        </nav>
+        <div class="footer-demo">
+          <h2>{t.footer.demoTitle}</h2>
+          <p>{t.footer.demo}</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      import '../scripts/ui';
+      // Mobile menu
+      const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const nav = document.getElementById('site-nav');
+      if (toggle && nav) {
+        const set = (open: boolean) => {
+          toggle.setAttribute('aria-expanded', String(open));
+          nav.dataset.open = String(open);
+          document.documentElement.classList.toggle('menu-open', open); // full-screen menu: lock page scroll
+          toggle.textContent = open ? toggle.dataset.closeLabel! : toggle.dataset.openLabel!;
+        };
+        toggle.addEventListener('click', () => set(toggle.getAttribute('aria-expanded') !== 'true'));
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { set(false); toggle.focus(); }
+        });
+        nav.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) set(false); });
+      }
+      // Language switch keeps the current query (filters) and hash.
+      document.querySelectorAll<HTMLAnchorElement>('[data-lang-switch]').forEach((a) => {
+        a.addEventListener('click', () => { a.href = a.pathname + location.search + location.hash; });
+      });
+    </script>
+  </body>
+</html>

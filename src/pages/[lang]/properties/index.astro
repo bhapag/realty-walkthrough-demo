@@ -1,0 +1,93 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PropertyCard from '../../../components/PropertyCard.astro';
+import Icon from '../../../components/Icon.astro';
+import { ui, langs, budgets, formatPrice, type Lang } from '../../../i18n/ui';
+import { properties } from '../../../data/properties';
+import { neighbourhoods } from '../../../data/neighbourhoods';
+
+export const getStaticPaths = () => langs.map((lang) => ({ params: { lang } }));
+const lang = Astro.params.lang as Lang;
+const t = ui[lang];
+const L = t.list;
+const budgetOptions = {
+  buy: budgets.buy.map((v) => ({ v, label: formatPrice(lang, v) })),
+  rent: budgets.rent.map((v) => ({ v, label: `${formatPrice(lang, v)} ${t.card.perMonth}` })),
+};
+---
+<Base lang={lang} title={`${t.meta.properties} · ${t.brand.name} ${t.brand.suffix}`} path="properties/" current="properties">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{L.title}</h1>
+      <p>{L.intro}</p>
+    </header>
+
+    <form class="filters" data-filters data-filter-panel data-open="false" aria-label={L.filters}
+      data-budgets={JSON.stringify(budgetOptions)} data-any-label={L.budgetAny}
+      data-results={L.results(0, 0).replace(/0/, '{n}').replace(/0/, '{total}')}>
+      <div class="sheet-backdrop" data-sheet-close aria-hidden="true"></div>
+      <div class="filters-grid" id="filter-fields" role="group" aria-labelledby="sheet-title">
+        <div class="sheet-head">
+          <h2 id="sheet-title">{L.filters}</h2>
+          <button class="icon-btn icon-btn-light" type="button" data-sheet-close aria-label={t.detail.close}><Icon name="close" /></button>
+        </div>
+        <fieldset class="field" style="border: 0; padding: 0; margin: 0">
+          <legend>{L.deal}</legend>
+          <div class="segmented">
+            <label><input type="radio" name="deal" value="" checked /><span>{L.dealAll}</span></label>
+            <label><input type="radio" name="deal" value="buy" /><span>{L.dealBuy}</span></label>
+            <label><input type="radio" name="deal" value="rent" /><span>{L.dealRent}</span></label>
+          </div>
+        </fieldset>
+        <div class="field">
+          <label for="f-hood">{L.hood}</label>
+          <select id="f-hood" name="hood">
+            <option value="">{L.hoodAll}</option>
+            {neighbourhoods.map((n) => <option value={n.id}>{n.name[lang]}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-type">{L.type}</label>
+          <select id="f-type" name="type">
+            <option value="">{L.typeAll}</option>
+            {Object.entries(t.types).map(([v, label]) => <option value={v}>{label}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-max">{L.budget}</label>
+          <select id="f-max" name="max" disabled aria-describedby="max-hint">
+            <option value="">{L.budgetAny}</option>
+          </select>
+          <span class="hint" id="max-hint">{L.budgetHint}</span>
+        </div>
+        <div class="field">
+          <label for="f-beds">{L.beds}</label>
+          <select id="f-beds" name="beds">
+            <option value="">{L.bedsAny}</option>
+            {[1, 2, 3, 4].map((n) => <option value={n}>{L.bedsMin(n)}</option>)}
+          </select>
+        </div>
+        <button class="btn btn-primary sheet-done" type="button" data-sheet-close>{L.showResults}</button>
+      </div>
+      <div class="filters-foot">
+        <p class="result-count" data-count aria-live="polite">{L.results(properties.length, properties.length)}</p>
+        <div class="actions" style="margin: 0">
+          <button class="btn btn-secondary filters-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="filter-fields"><Icon name="filter" />{L.showFilters}</button>
+          <button class="link-button" type="button" data-clear>{L.clear}</button>
+        </div>
+      </div>
+    </form>
+    <noscript><p class="note">{L.noscript}</p></noscript>
+
+    <div class="cards" style="margin-block-start: 1.5rem">
+      {properties.map((p) => <PropertyCard p={p} lang={lang} headingLevel="h2" />)}
+    </div>
+    <div class="empty" data-empty hidden>
+      <h2 style="font-size: var(--step-2)">{L.emptyTitle}</h2>
+      <p class="muted">{L.emptyBody}</p>
+      <button class="btn btn-secondary" type="button" data-clear>{L.clear}</button>
+    </div>
+  </div>
+</Base>
+
+<script>import '../../../scripts/filters';</script>

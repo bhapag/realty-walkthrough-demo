@@ -1,0 +1,83 @@
+---
+// Homepage opening: a scroll-controlled walk from the garden path into the
+// concept house. Without JS, with reduced motion or with data saver it is a
+// composed still (exterior + interior) and the page works the same.
+import { getImage } from 'astro:assets';
+import { ui, href, type Lang } from '../i18n/ui';
+import { images } from '../data/images';
+import manifest from '../data/journey.json';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = ui[lang];
+const J = t.journey;
+
+const still = async (src: ImageMetadata, widths: number[]) =>
+  (await Promise.all(widths.map(async (w) => `${(await getImage({ src, width: w, format: 'webp', quality: 76 })).src} ${w}w`))).join(', ');
+const extLand = await still(images.journeyExt.src, [960, 1440, 1920, 2560]);
+const extPort = await still(images.journeyExtPort.src, [480, 760, 1080, 1520]);
+const inLand = await still(images.journeyIn.src, [960, 1440, 1920]);
+const inPort = await still(images.journeyInPort.src, [480, 760, 1080]);
+const first = (s: { base: string; w: number }) => `${s.base}000.webp ${s.w}w`;
+const posterLand = manifest.land.map(first).join(', ');
+// Phones: stop at the 860 tier the player uses (the canvas is capped at 2x).
+const posterPort = manifest.port.filter((t) => t.w <= 860).map(first).join(', ');
+---
+<div class="hero-band">
+  <div class="wrap hero-band-grid">
+    <h1 id="hero-title" class="hero-title">{t.hero.title}</h1>
+    <div class="hero-aside">
+      <p class="hero-lede">{t.hero.lede}</p>
+      <div class="actions">
+        <a class="btn btn-primary" href={href(lang, 'properties/')}>{J.explore}</a>
+        <a class="btn btn-secondary" href={href(lang, 'contact/')}>{t.hero.secondary}</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="journey" data-journey data-frames={JSON.stringify(manifest)} data-phase="0" aria-label={J.region}>
+  <div class="journey-stage">
+    <picture class="journey-poster">
+      <source media="(max-aspect-ratio: 4/5)" srcset={posterPort} sizes="100vw" type="image/webp" />
+      <source srcset={posterLand} sizes="100vw" type="image/webp" />
+      <img src={`${manifest.land[0].base}000.webp`} alt={images.journeyExt.alt[lang]} width={manifest.land[0].w} height={manifest.land[0].h} loading="lazy" fetchpriority="high" decoding="async" />
+    </picture>
+    <picture class="journey-still">
+      <source media="(max-aspect-ratio: 4/5)" srcset={extPort} sizes="100vw" type="image/webp" />
+      <img srcset={extLand} sizes="100vw" alt={images.journeyExt.alt[lang]} width="2688" height="1520" loading="lazy" decoding="async" />
+    </picture>
+    <canvas class="journey-canvas" aria-hidden="true"></canvas>
+
+    <div class="wrap journey-settle" inert>
+      <div class="journey-copy">
+        <h2>{J.settleTitle}</h2>
+        <p>{J.settleBody}</p>
+        <div class="actions">
+          <a class="btn btn-primary" href={href(lang, 'properties/')}>{J.explore}</a>
+          <button class="btn btn-secondary btn-on-image" type="button" data-replay>{J.replay}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap journey-bar">
+      <p class="media-chip"><span class="media-label">{t.media.label}</span><span class="media-note">{t.media.note}</span></p>
+      <ol class="journey-phases" aria-label={J.region}>
+        {J.phases.map((p, i) => <li data-i={i}>{p}</li>)}
+      </ol>
+      <a class="journey-skip" href="#selected">{J.skip}</a>
+    </div>
+  </div>
+</section>
+
+<section class="journey-inside wrap" aria-labelledby="inside-title">
+  <picture>
+    <source media="(max-aspect-ratio: 4/5)" srcset={inPort} sizes="92vw" type="image/webp" />
+    <img srcset={inLand} sizes="(max-width: 1240px) 92vw, 1200px" alt={images.journeyIn.alt[lang]} width="2688" height="1520" loading="lazy" decoding="async" />
+  </picture>
+  <div class="journey-inside-copy">
+    <h2 id="inside-title">{J.settleTitle}</h2>
+    <p>{J.settleBody}</p>
+    <p class="media-chip"><span class="media-label">{t.media.label}</span><span class="media-note">{t.media.note}</span></p>
+  </div>
+</section>
